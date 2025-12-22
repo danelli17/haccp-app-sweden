@@ -59,24 +59,29 @@ CleaningTask.hasMany(CleaningLog);
 CleaningLog.belongsTo(CleaningTask);
 
 const initDb = async () => {
-  await sequelize.sync({ force: true });
+  await sequelize.sync();
   
-  // Seed initial CCPs for a typical Swedish restaurant
-  await CCP.bulkCreate([
-    { name: 'Kylskåp (Fridge)', maxLimit: 8, description: 'Standard cold storage' },
-    { name: 'Frys (Freezer)', maxLimit: -18, description: 'Frozen storage' },
-    { name: 'Varmhållning (Hot Holding)', minLimit: 60, description: 'Food kept hot for service' },
-    { name: 'Nedkylning (Cooling)', description: 'Cooling from 60°C to 8°C within 4 hours' }
-  ]);
+  // Only seed if no CCPs exist
+  const ccpCount = await CCP.count();
+  if (ccpCount === 0) {
+    // Seed initial CCPs for a typical Swedish restaurant
+    await CCP.bulkCreate([
+      { name: 'Kylskåp (Fridge)', maxLimit: 8, description: 'Standard cold storage' },
+      { name: 'Frys (Freezer)', maxLimit: -18, description: 'Frozen storage' },
+      { name: 'Varmhållning (Hot Holding)', minLimit: 60, description: 'Food kept hot for service' },
+      { name: 'Nedkylning (Cooling)', description: 'Cooling from 60°C to 8°C within 4 hours' }
+    ]);
 
-  // Seed Cleaning Tasks
-  await CleaningTask.bulkCreate([
-    { title: 'Rengör arbetsbänkar (Clean benches)', frequency: 'Daily', area: 'Kitchen' },
-    { title: 'Töm sopor (Empty trash)', frequency: 'Daily', area: 'General' },
-    { title: 'Diskmaskin temp check', frequency: 'Daily', area: 'Dishwash' },
-    { title: 'Storstädning kylar (Deep clean fridges)', frequency: 'Weekly', area: 'Kitchen' },
-    { title: 'Rengör fläktfilter (Clean vent filters)', frequency: 'Weekly', area: 'Kitchen' }
-  ]);
+    // Seed Cleaning Tasks
+    await CleaningTask.bulkCreate([
+      { title: 'Rengör arbetsbänkar (Clean benches)', frequency: 'Daily', area: 'Kitchen' },
+      { title: 'Töm sopor (Empty trash)', frequency: 'Daily', area: 'General' },
+      { title: 'Diskmaskin temp check', frequency: 'Daily', area: 'Dishwash' },
+      { title: 'Storstädning kylar (Deep clean fridges)', frequency: 'Weekly', area: 'Kitchen' },
+      { title: 'Rengör fläktfilter (Clean vent filters)', frequency: 'Weekly', area: 'Kitchen' }
+    ]);
+    console.log('Database seeded successfully.');
+  }
 };
 
 module.exports = { sequelize, TemperatureLog, CCP, GoodsReceipt, CleaningTask, CleaningLog, initDb };
