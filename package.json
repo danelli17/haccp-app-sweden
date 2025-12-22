@@ -1,0 +1,8 @@
+{
+  "name": "haccp-app-sweden-root",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "cd server && npm install && node index.js",
+    "install-server": "cd server && npm install"
+  }
+}
