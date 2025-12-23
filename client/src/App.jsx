@@ -12,20 +12,32 @@ function App() {
   const [stats, setStats] = useState({ totalLogs: 0, deviations: 0 });
   const [formData, setForm] = useState({ equipmentName: '', temperature: '', staffName: '' });
   const [alert, setAlert] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
-    const [l, c, s] = await Promise.all([
-      axios.get(`${API_URL}/logs`),
-      axios.get(`${API_URL}/ccps`),
-      axios.get(`${API_URL}/stats`)
-    ]);
-    setLogs(l.data);
-    setCcps(c.data);
-    setStats(s.data);
+    try {
+      setIsLoading(true);
+      setIsError(false);
+      const [l, c, s] = await Promise.all([
+        axios.get(`${API_URL}/logs`),
+        axios.get(`${API_URL}/ccps`),
+        axios.get(`${API_URL}/stats`)
+      ]);
+      setLogs(l.data);
+      setCcps(c.data);
+      setStats(s.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setIsError(true);
+      setAlert({ type: 'danger', msg: 'Failed to load data. Please try again later.' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -50,9 +62,28 @@ function App() {
       fetchData();
       setAlert({ type: isDeviation ? 'danger' : 'success', msg: isDeviation ? 'DEVIATION DETECTED! Please record corrective action.' : 'Log saved successfully.' });
     } catch (err) {
-      console.error(err);
+      console.error("Error submitting log:", err);
+      setAlert({ type: 'danger', msg: 'Failed to save log. Please try again.' });
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-light min-vh-100 d-flex justify-content-center align-items-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="bg-light min-vh-100 d-flex justify-content-center align-items-center">
+        <Alert variant="danger">Failed to load application. Please check your network connection and refresh the page.</Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-light min-vh-100">
